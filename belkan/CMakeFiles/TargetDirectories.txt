@@ -1,9 +1,0 @@
-/home/juane/Dropbox/2AGI/IA/PRACTICAS/PRACTICA2/v2.0/CMakeFiles/BelkanSG.dir
-/home/juane/Dropbox/2AGI/IA/PRACTICAS/PRACTICA2/v2.0/CMakeFiles/Belkan.dir
-/home/juane/Dropbox/2AGI/IA/PRACTICAS/PRACTICA2/v2.0/CMakeFiles/rebuild_cache.dir
-/home/juane/Dropbox/2AGI/IA/PRACTICAS/PRACTICA2/v2.0/CMakeFiles/motorLib.dir
-/home/juane/Dropbox/2AGI/IA/PRACTICAS/PRACTICA2/v2.0/CMakeFiles/obj3DLib.dir
-/home/juane/Dropbox/2AGI/IA/PRACTICAS/PRACTICA2/v2.0/CMakeFiles/edit_cache.dir
-/home/juane/Dropbox/2AGI/IA/PRACTICAS/PRACTICA2/v2.0/CMakeFiles/GLUILib.dir
-/home/juane/Dropbox/2AGI/IA/PRACTICAS/PRACTICA2/v2.0/CMakeFiles/modelosBelkanLib.dir
-/home/juane/Dropbox/2AGI/IA/PRACTICAS/PRACTICA2/v2.0/CMakeFiles/comportamientosLib.dir
