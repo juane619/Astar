@@ -15,3 +15,5 @@ Los archivos interesantes del proyecto que determinan la "inteligencia del robot
 
     belkan\Comportamientos_Jugador\jugador.hpp
     belkan\Comportamientos_Jugador\jugador.cpp
+
+Lo demás se corresponde con el simulador.
