@@ -1,5 +1,7 @@
 INSTALACIÓN DEL SIMULADOR Y EJECUCIÓN
 
+Situados en la carpeta "belkan/":
+
 1.  Instalamos las bibliotecas necesarias para la compilación: "./install.sh"
 
 2.  Creación del fichero makefile: "cmake ."
