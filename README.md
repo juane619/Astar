@@ -13,7 +13,7 @@ En realidad lo interesante del proyecto es la implementación del algoritmo A es
 
 Los archivos interesantes del proyecto que determinan la "inteligencia del robot" y donde está implementado el algoritmo A* en si, son los siguientes: 
 
-    belkan\Comportamientos_Jugador\jugador.hpp
-    belkan\Comportamientos_Jugador\jugador.cpp
+    belkan\Comportamientos_Jugador\jugador.hpp  <-- A* e inteligencia robot
+    belkan\Comportamientos_Jugador\jugador.cpp  <-- inteligencia robot
 
 Lo demás se corresponde a la implementación del simulador adaptado a esta práctica.
