@@ -1,8 +1,304 @@
 #include "../Comportamientos_Jugador/jugador.hpp"
 #include <iostream>
-#include <vector>
 
 using namespace std;
+
+/*CLASE NODO*/
+Nodo::Nodo(const pair<int, int> &p_pos, int g_p, const pair<int, int> p_obj = pair<int, int>(0, 0), Nodo* p_padre = nullptr) {
+    pos.first = p_pos.first;
+    pos.second = p_pos.second;
+    padre = p_padre;
+    h = distancia(pos, p_obj);
+
+    if (padre == nullptr)
+        g = 0;
+    else
+        g = padre->g + g_p;
+
+    f = g + h;
+}
+
+bool Nodo::operator==(const Nodo& otro) {
+    return otro.pos.first == this->pos.first && otro.pos.second == this->pos.second;
+}
+
+int Nodo::distancia(const pair <int, int> &a, const pair <int, int> &b) {
+    return abs(a.first - b.first) + abs(a.second - b.second);
+}
+
+void Nodo::imp_nodo() {
+    cout << pos.first << " " << pos.second << " " << g << " " << h << " " << f << " padre: ";
+    if (padre == nullptr)
+        cout << "null" << endl;
+    else
+        cout << (padre->pos).first << " " << (padre->pos).second << endl;
+}
+
+/*CLASE AESTRELLA*/
+AEstrella::AEstrella(Nodo* p_ini, Nodo* p_fin, const vector< std::vector< unsigned char> > &p_mapa, const vector< std::vector< unsigned char> > &p_mapas, bool p_go_rey, int ori_p) {
+    mapa_t = p_mapa;
+    mapa_s = p_mapas;
+    inicio = p_ini;
+    fin = p_fin;
+    go_rey = p_go_rey;
+    ori = ori_p;
+    can = true;
+    sol_en = false;
+    fallo = false;
+
+    cerrada.push_back(inicio);
+
+    list<Nodo*> vecinos_ini = getVecinos(inicio);
+
+    //cout << vecinos_ini.size() << endl;
+    
+    if (can){
+        for (auto it = vecinos_ini.begin(); it != vecinos_ini.end(); it++){
+            (*it)->imp_nodo();
+            abierta.insert(*it);
+        }
+    }
+    
+    imp_lista(abierta);
+    cin.get();
+    //cout << abierta.size() << endl;
+    //cout << "LLega1.." << endl;
+    while (!fallo && !sol_en) {
+        if (abierta.empty()) {
+            fallo = true;
+            break;
+        }
+
+        //cout << "LLega2.." << endl;
+        buscar();
+
+        if (solucionEncontrada()) {
+            sol_en = true;
+            break;
+        }
+        //cout << "LLega3.." << endl;
+    }
+    //        cout << "LLega22.." << endl;
+}
+
+list<Nodo*> AEstrella::getVecinos(Nodo* n) {
+    list<Nodo*> vecinos;
+
+    if (ori == 0 || ori == 2) {
+        if (mapa_t.size() > 101) {
+            if (mapa_t[n->pos.first + 1][n->pos.second] != 'M' && mapa_t[n->pos.first + 1][n->pos.second] != 'B' && mapa_t[n->pos.first + 1][n->pos.second] != 'A' && mapa_t[n->pos.first + 1][n->pos.second] != 'P')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first + 1, n->pos.second), 1, fin->pos, n));
+
+            if (mapa_t[n->pos.first - 1][n->pos.second] != 'M' && mapa_t[n->pos.first - 1][n->pos.second] != 'B' && mapa_t[n->pos.first - 1][n->pos.second] != 'A' && mapa_t[n->pos.first - 1][n->pos.second] != 'P')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first - 1, n->pos.second), 1, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second - 1] != 'M' && mapa_t[n->pos.first][n->pos.second - 1] != 'A' && mapa_t[n->pos.first][n->pos.second - 1] != 'B' && mapa_t[n->pos.first][n->pos.second - 1] != 'P')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second - 1), 3, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second + 1] != 'M' && mapa_t[n->pos.first][n->pos.second + 1] != 'A' && mapa_t[n->pos.first][n->pos.second + 1] != 'B' && mapa_t[n->pos.first][n->pos.second + 1] != 'P')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second + 1), 3, fin->pos, n));
+
+        } else if (!go_rey) {
+            //cout << mapa_s[n->pos.first][n->pos.second + 1] << " " << mapa_s[n->pos.first][n->pos.second -1] << " " << mapa_s[n->pos.first+1][n->pos.second] << " " << mapa_s[n->pos.first-1][n->pos.second] << endl;
+
+            if (mapa_t[n->pos.first + 1][n->pos.second] != 'M' && mapa_t[n->pos.first + 1][n->pos.second] != 'B' && mapa_t[n->pos.first + 1][n->pos.second] != 'A' && mapa_t[n->pos.first + 1][n->pos.second] != 'P' && mapa_s[n->pos.first + 1][n->pos.second] != 'r' && mapa_t[n->pos.first + 1][n->pos.second] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first + 1, n->pos.second), 1, fin->pos, n));
+
+            if (mapa_t[n->pos.first - 1][n->pos.second] != 'M' && mapa_t[n->pos.first - 1][n->pos.second] != 'B' && mapa_t[n->pos.first - 1][n->pos.second] != 'A' && mapa_t[n->pos.first - 1][n->pos.second] != 'P' && mapa_s[n->pos.first - 1][n->pos.second] != 'r' && mapa_t[n->pos.first - 1][n->pos.second] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first - 1, n->pos.second), 1, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second - 1] != 'M' && mapa_t[n->pos.first][n->pos.second - 1] != 'B' && mapa_t[n->pos.first][n->pos.second - 1] != 'A' && mapa_t[n->pos.first][n->pos.second - 1] != 'P' && mapa_s[n->pos.first][n->pos.second - 1] != 'r' && mapa_t[n->pos.first][n->pos.second - 1] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second - 1), 3, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second + 1] != 'M' && mapa_t[n->pos.first][n->pos.second + 1] != 'B' && mapa_t[n->pos.first][n->pos.second + 1] != 'A' && mapa_t[n->pos.first][n->pos.second + 1] != 'P' && mapa_s[n->pos.first][n->pos.second + 1] != 'r' && mapa_t[n->pos.first][n->pos.second + 1] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second + 1), 3, fin->pos, n));
+        } else {
+            if (mapa_t[n->pos.first + 1][n->pos.second] != 'M' && mapa_t[n->pos.first + 1][n->pos.second] != 'B' && mapa_t[n->pos.first + 1][n->pos.second] != 'A' && mapa_t[n->pos.first + 1][n->pos.second] != 'P' && mapa_t[n->pos.first + 1][n->pos.second] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first + 1, n->pos.second), 1, fin->pos, n));
+
+            if (mapa_t[n->pos.first - 1][n->pos.second] != 'M' && mapa_t[n->pos.first - 1][n->pos.second] != 'B' && mapa_t[n->pos.first - 1][n->pos.second] != 'A' && mapa_t[n->pos.first - 1][n->pos.second] != 'P' && mapa_t[n->pos.first - 1][n->pos.second] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first - 1, n->pos.second), 1, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second - 1] != 'M' && mapa_t[n->pos.first][n->pos.second - 1] != 'A' && mapa_t[n->pos.first][n->pos.second - 1] != 'B' && mapa_t[n->pos.first][n->pos.second - 1] != 'P' && mapa_t[n->pos.first][n->pos.second - 1] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second - 1), 3, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second + 1] != 'M' && mapa_t[n->pos.first][n->pos.second + 1] != 'A' && mapa_t[n->pos.first][n->pos.second + 1] != 'B' && mapa_t[n->pos.first][n->pos.second + 1] != 'P' && mapa_t[n->pos.first][n->pos.second + 1] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second + 1), 3, fin->pos, n));
+        }
+    } else {
+        if (mapa_t.size() > 101) {
+            if (mapa_t[n->pos.first + 1][n->pos.second] != 'M' && mapa_t[n->pos.first + 1][n->pos.second] != 'B' && mapa_t[n->pos.first + 1][n->pos.second] != 'A' && mapa_t[n->pos.first + 1][n->pos.second] != 'P')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first + 1, n->pos.second), 3, fin->pos, n));
+
+            if (mapa_t[n->pos.first - 1][n->pos.second] != 'M' && mapa_t[n->pos.first - 1][n->pos.second] != 'B' && mapa_t[n->pos.first - 1][n->pos.second] != 'A' && mapa_t[n->pos.first - 1][n->pos.second] != 'P')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first - 1, n->pos.second), 3, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second - 1] != 'M' && mapa_t[n->pos.first][n->pos.second - 1] != 'A' && mapa_t[n->pos.first][n->pos.second - 1] != 'B' && mapa_t[n->pos.first][n->pos.second - 1] != 'P')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second - 1), 1, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second + 1] != 'M' && mapa_t[n->pos.first][n->pos.second + 1] != 'A' && mapa_t[n->pos.first][n->pos.second + 1] != 'B' && mapa_t[n->pos.first][n->pos.second + 1] != 'P')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second + 1), 1, fin->pos, n));
+
+        } else if (!go_rey) {
+            //cout << mapa_s[n->pos.first][n->pos.second + 1] << " " << mapa_s[n->pos.first][n->pos.second -1] << " " << mapa_s[n->pos.first+1][n->pos.second] << " " << mapa_s[n->pos.first-1][n->pos.second] << endl;
+
+            if (mapa_t[n->pos.first + 1][n->pos.second] != 'M' && mapa_t[n->pos.first + 1][n->pos.second] != 'B' && mapa_t[n->pos.first + 1][n->pos.second] != 'A' && mapa_t[n->pos.first + 1][n->pos.second] != 'P' && mapa_s[n->pos.first + 1][n->pos.second] != 'r' && mapa_t[n->pos.first + 1][n->pos.second] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first + 1, n->pos.second), 3, fin->pos, n));
+
+            if (mapa_t[n->pos.first - 1][n->pos.second] != 'M' && mapa_t[n->pos.first - 1][n->pos.second] != 'B' && mapa_t[n->pos.first - 1][n->pos.second] != 'A' && mapa_t[n->pos.first - 1][n->pos.second] != 'P' && mapa_s[n->pos.first - 1][n->pos.second] != 'r' && mapa_t[n->pos.first - 1][n->pos.second] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first - 1, n->pos.second), 3, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second - 1] != 'M' && mapa_t[n->pos.first][n->pos.second - 1] != 'B' && mapa_t[n->pos.first][n->pos.second - 1] != 'A' && mapa_t[n->pos.first][n->pos.second - 1] != 'P' && mapa_s[n->pos.first][n->pos.second - 1] != 'r' && mapa_t[n->pos.first][n->pos.second - 1] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second - 1), 1, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second + 1] != 'M' && mapa_t[n->pos.first][n->pos.second + 1] != 'B' && mapa_t[n->pos.first][n->pos.second + 1] != 'A' && mapa_t[n->pos.first][n->pos.second + 1] != 'P' && mapa_s[n->pos.first][n->pos.second + 1] != 'r' && mapa_t[n->pos.first][n->pos.second + 1] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second + 1), 1, fin->pos, n));
+        } else {
+            if (mapa_t[n->pos.first + 1][n->pos.second] != 'M' && mapa_t[n->pos.first + 1][n->pos.second] != 'B' && mapa_t[n->pos.first + 1][n->pos.second] != 'A' && mapa_t[n->pos.first + 1][n->pos.second] != 'P' && mapa_t[n->pos.first + 1][n->pos.second] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first + 1, n->pos.second), 3, fin->pos, n));
+
+            if (mapa_t[n->pos.first - 1][n->pos.second] != 'M' && mapa_t[n->pos.first - 1][n->pos.second] != 'B' && mapa_t[n->pos.first - 1][n->pos.second] != 'A' && mapa_t[n->pos.first - 1][n->pos.second] != 'P' && mapa_t[n->pos.first - 1][n->pos.second] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first - 1, n->pos.second), 3, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second - 1] != 'M' && mapa_t[n->pos.first][n->pos.second - 1] != 'A' && mapa_t[n->pos.first][n->pos.second - 1] != 'B' && mapa_t[n->pos.first][n->pos.second - 1] != 'P' && mapa_t[n->pos.first][n->pos.second - 1] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second - 1), 1, fin->pos, n));
+
+            if (mapa_t[n->pos.first][n->pos.second + 1] != 'M' && mapa_t[n->pos.first][n->pos.second + 1] != 'A' && mapa_t[n->pos.first][n->pos.second + 1] != 'B' && mapa_t[n->pos.first][n->pos.second + 1] != 'P' && mapa_t[n->pos.first][n->pos.second + 1] != '?')
+                vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second + 1), 1, fin->pos, n));
+        }
+    }
+
+    /*PUERTAS ANULADAS
+     if (mapa_t[n->pos.first + 1][n->pos.second] != 'M' && mapa_t[n->pos.first + 1][n->pos.second] != 'B' && mapa_t[n->pos.first + 1][n->pos.second] != 'A' && mapa_t[n->pos.first + 1][n->pos.second] != 'P' && mapa_t[n->pos.first + 1][n->pos.second] != 'D')
+        vecinos.push_back(new Nodo(pair<int, int>(n->pos.first + 1, n->pos.second), fin->pos, n));
+
+    if (mapa_t[n->pos.first - 1][n->pos.second] != 'M' && mapa_t[n->pos.first - 1][n->pos.second] != 'B' && mapa_t[n->pos.first - 1][n->pos.second] != 'A' && mapa_t[n->pos.first - 1][n->pos.second] != 'P' && mapa_t[n->pos.first - 1][n->pos.second] != 'D')
+        vecinos.push_back(new Nodo(pair<int, int>(n->pos.first - 1, n->pos.second), fin->pos, n));
+
+    if (mapa_t[n->pos.first][n->pos.second - 1] != 'M' && mapa_t[n->pos.first][n->pos.second - 1] != 'A' && mapa_t[n->pos.first][n->pos.second - 1] != 'B' && mapa_t[n->pos.first][n->pos.second - 1] != 'P' && mapa_t[n->pos.first][n->pos.second - 1] != 'D')
+        vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second - 1), fin->pos, n));
+
+    if (mapa_t[n->pos.first][n->pos.second + 1] != 'M' && mapa_t[n->pos.first][n->pos.second + 1] != 'A' && mapa_t[n->pos.first][n->pos.second + 1] != 'B' && mapa_t[n->pos.first][n->pos.second + 1] != 'P' && mapa_t[n->pos.first][n->pos.second + 1] != 'D')
+        vecinos.push_back(new Nodo(pair<int, int>(n->pos.first, n->pos.second + 1), fin->pos, n));*/
+
+    if (!vecinos.empty()) {
+        can = true;
+    } else {
+        can = false;
+    }
+
+    return vecinos;
+}
+
+bool AEstrella::solucionEncontrada() {
+    for (auto it = abierta.begin(); it != abierta.end(); it++) {
+        if (fin == (*it))
+            return true;
+    }
+    return false;
+}
+
+void AEstrella::f_menor() { //mover mejor nodo de abiertos a cerrados
+    cerrada.push_back(*abierta.begin());
+    abierta.erase(abierta.begin());
+}
+
+bool AEstrella::enLista(const Nodo* n, const list<Nodo*> &lista) {
+    for (auto it = lista.begin(); it != lista.end(); it++)
+        if (n == (*it))
+            return true;
+
+    return false;
+}
+
+bool AEstrella::enLista(const Nodo* n, const multiset<Nodo*, mycomparison> &lista) {
+    for (auto it = lista.begin(); it != lista.end(); it++)
+        if (n == (*it))
+            return true;
+
+    return false;
+}
+
+void AEstrella::ruta(Nodo* select, const list<Nodo*> &vecinos_select) {
+    //cout << vecinos_select.size() << endl;
+    for (auto it = vecinos_select.begin(); it != vecinos_select.end(); it++) {
+        if (enLista(*it, cerrada)) {
+            //cout << "En cerrada ya..\n";
+            continue;
+        } else if (!enLista(*it, abierta)) {
+            //cout << "Añadiendo a abierta..\n";
+            abierta.insert(*it);
+        } else { //Si esta en la lista abierta
+            //cout << "En abierta ya..\n";
+            for (auto itaux = abierta.begin(); itaux != abierta.end(); itaux++) {
+                if ((*it) == (*itaux)) {
+                    if ((*it)->g < (*itaux)->g) {
+                        itaux = abierta.erase(itaux);
+                        abierta.insert(*it);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void AEstrella::buscar() {
+    //cout << "LLega1.." << endl;
+    f_menor(); //Pasa el elemento con f menor de la lista abierta a la cerrada
+    //cout << "LLega2.." << endl;
+    Nodo* select = cerrada.back();
+    
+    list<Nodo*> vecinos = getVecinos(select);
+    //imp_lista(vecinos);
+    //cin.get();
+    if (!vecinos.empty())
+        ruta(select, vecinos);
+    //cout << "LLega2.." << endl;
+}
+
+list<pair<int, int> > AEstrella::camino() {
+    list<pair<int, int> > cam;
+    Nodo* objetivo = nullptr;
+    for (auto itaux = abierta.begin(); itaux != abierta.end(); itaux++) {
+        if ((*itaux)->pos.first == fin->pos.first && (*itaux)->pos.second == fin->pos.second) {
+            objetivo = *itaux;
+        }
+    }
+
+    if (objetivo != nullptr) {
+        while (objetivo->padre != nullptr) {
+
+            cam.push_back(objetivo->pos);
+            objetivo = objetivo->padre;
+        }
+
+        cam.reverse();
+
+    }
+    return cam;
+}
+
+bool AEstrella::getCan() {
+
+    return can;
+}
+
+void AEstrella::imp_lista(const list<Nodo*> &list) {
+
+    for (auto it = list.begin(); it != list.end(); it++)
+        (*it)->imp_nodo();
+
+    cout << endl << endl;
+}
+
+void AEstrella::imp_lista(const multiset<Nodo*, mycomparison> &list) {
+
+    for (auto it = list.begin(); it != list.end(); it++)
+        (*it)->imp_nodo();
+
+    cout << endl << endl;
+}
 
 /*COnstructor por defecto*/
 ComportamientoJugador::ComportamientoJugador(unsigned int size) : Comportamiento(size) {
@@ -80,6 +376,7 @@ ComportamientoJugador::ComportamientoJugador(unsigned int size) : Comportamiento
     std::vector< unsigned char> aux(200, '?');
 
     for (unsigned int i = 0; i < 200; i++) {
+
         mapa_aux.push_back(aux);
     }
     /////
@@ -153,6 +450,7 @@ int ComportamientoJugador::see_pk(const std::vector< unsigned char> &t, const st
                 }
                 if (!encontrado && s[i] == '4' && hay_reyes && !tengo_regalo) {
                     //cout << "Go regalo.." << endl;
+
                     encontrado = true;
                     go_point = true;
                     pos = i;
@@ -171,6 +469,7 @@ unsigned get_pk_orientation(int pos_pk) {
         return 1;
     else if (pos_pk == 3 || pos_pk == 7 || pos_pk == 8 || pos_pk == 13 || pos_pk == 14 || pos_pk == 15)
         return 2;
+
     else
         return 0;
 }
@@ -194,6 +493,7 @@ void ComportamientoJugador::save_inf(const std::vector< unsigned char> &t, const
             if (pk_found)
                 reyes_seen.insert(make_point(i, get_pk_orientation(i), pos_actual));
         } else if (s[i] == '4') {
+
             hay_regalos = true;
         }
     }
@@ -201,6 +501,7 @@ void ComportamientoJugador::save_inf(const std::vector< unsigned char> &t, const
 
 /*DIstancia real entre dos tuplas*/
 int distancia_r(const pair <int, int> &a, const pair <int, int> &b) {
+
     return abs(a.first - b.first) + abs(a.second - b.second);
 }
 
@@ -211,6 +512,7 @@ pair<int, int> ComportamientoJugador::getCercano(const vector<pair< int, int> > 
     it++;
 
     for (; it != p.end(); it++) {
+
         if (distancia_r(pos_actual, *it) < distancia_r(pos_actual, cerca))
             cerca = *it;
     }
@@ -226,6 +528,7 @@ pair<int, int> ComportamientoJugador::getCercano(const set<pair< int, int> > &p)
     it++;
 
     for (; it != p.end(); it++) {
+
         if (distancia_r(pos_actual, *it) < distancia_r(pos_actual, cerca))
             cerca = *it;
     }
@@ -301,6 +604,7 @@ bool ComportamientoJugador::planing(const list<pair<int, int> > &pares, const pa
                     plan.push_back(actTURN_R);
                     bruj_aux = 3;
                 } else {
+
                     pos_aux.second--;
                     plan.push_back(actFORWARD);
                 }
@@ -337,7 +641,7 @@ void ComportamientoJugador::ejecutaPlan(Action &act, const Sensores &sens) {
                 //                
                 if (go_regalo && sens.regalos.size() > 1) {
                     cont_regalos = ((cont_regalos + 1) % sens.regalos.size());
-                    pathFinding(pos_actual, sens.regalos[cont_regalos], act, sens, mapaResultado, mapaEntidades, false);
+                    pathFinding(pos_actual, sens.regalos[cont_regalos], act, sens, mapaResultado, mapaEntidades, false, brujula);
                 } else if (goto_rey && reyes_seen.size() > 1) {
                     cont_reyes = ((cont_reyes + 1) % reyes_seen.size());
                     pair<int, int> nuevo_objetivo;
@@ -348,7 +652,7 @@ void ComportamientoJugador::ejecutaPlan(Action &act, const Sensores &sens) {
 
                     //cout << "Problema 2 .. " << hay_llaves << " " << cont_reyes << " " << nuevo_objetivo.first << " " << nuevo_objetivo.second << endl;
 
-                    pathFinding(pos_actual, nuevo_objetivo, act, sens, mapaResultado, mapaEntidades, true);
+                    pathFinding(pos_actual, nuevo_objetivo, act, sens, mapaResultado, mapaEntidades, true, brujula);
                 } else {
                     //cout << "Problema 3.." << endl;
                     act = girar(sens);
@@ -390,6 +694,7 @@ void ComportamientoJugador::ejecutaPlan(Action &act, const Sensores &sens) {
         }
     }
     if (plan.size() == 0) {
+
         goto_rey = false;
         go_regalo = false;
         ejecutando_plan = false;
@@ -409,6 +714,7 @@ void PintaPlan(list<Action> plan) {
         } else if (*it == actTURN_L) {
             cout << "I ";
         } else {
+
             cout << "- ";
         }
         it++;
@@ -419,18 +725,18 @@ void PintaPlan(list<Action> plan) {
 Action girar(const Sensores & s);
 
 /*PATHFINDING: A ESTRELLA*/
-void ComportamientoJugador::pathFinding(const pair<int, int> &pos_orig, const pair<int, int> &point_objetivo, Action &act, const Sensores &sens, const vector< std::vector< unsigned char> > &p_mapa, const vector< std::vector< unsigned char> > &p_mapas, bool go_rey) {
+void ComportamientoJugador::pathFinding(const pair<int, int> &pos_orig, const pair<int, int> &point_objetivo, Action &act, const Sensores &sens, const vector< std::vector< unsigned char> > &p_mapa, const vector< std::vector< unsigned char> > &p_mapas, bool go_rey, int ori_p) {
     if (cont_plan == 0) {
-        //cout << "Llamando a PATHFINDING.." << endl;
+        cout << "Llamando a PATHFINDING.." << endl;
 
-        //cout << point_objetivo.first << "  " << point_objetivo.second << endl;
+        cout << point_objetivo.first << "  " << point_objetivo.second << endl;
         cont_plan = 0;
 
-        Nodo orig(pos_orig, point_objetivo);
-        Nodo dest(point_objetivo);
-        //cout << "Llega 1.." << endl;
-        AEstrella aprueba(&orig, &dest, p_mapa, p_mapas, go_rey);
-        //cout << "Llega 2.." << endl;
+        Nodo orig(pos_orig, 0, point_objetivo);
+        Nodo dest(point_objetivo, 0);
+        cout << "Llega 1.." << endl;
+        AEstrella aprueba(&orig, &dest, p_mapa, p_mapas, go_rey, ori_p);
+        cout << "Llega 2.." << endl;
         if (aprueba.getCan()) {
             //cout << "PLanificamos camino.." << endl;
             list<pair<int, int> > cam = aprueba.camino();
@@ -452,6 +758,7 @@ void ComportamientoJugador::pathFinding(const pair<int, int> &pos_orig, const pa
                     //ejecutando_plan=false;
                 }
             }
+
             if (plan.size() > 0)
                 plan.pop_front();
         }
@@ -561,7 +868,9 @@ pair<int, int> ComportamientoJugador::make_point(int pos_elem, int ori_elem, con
             point.second = pos_actuall.second - 3;
         else if (pos_elem > 3)
             point.second = pos_actuall.second - 2;
-        else if (pos_elem > 0)
+        else
+
+            if (pos_elem > 0)
             point.second = pos_actuall.second - 1;
     }
 
@@ -573,6 +882,7 @@ pair<int, int> ComportamientoJugador::make_point(int pos_elem, int ori_elem, con
 /********************ACCIONES DE ACTUALIZACION**************************/
 
 void ComportamientoJugador::act_precipicios() {
+
     std::vector< unsigned char> aux(30, 'P');
     mapaResultado[0] = aux;
 }
@@ -630,6 +940,7 @@ void ComportamientoJugador::act_mapa(std::vector< std::vector< unsigned char> > 
         mapa[posx + 3][posy - 2] = v[14];
         mapa[posx + 3][posy - 3] = v[15];
     } else if (brujula == 3) {
+
         mapa[posx + 1][posy - 1] = v[1];
         mapa[posx][posy - 1] = v[2];
         mapa[posx - 1][posy - 1] = v[3];
@@ -663,6 +974,7 @@ void ComportamientoJugador::revelar(const Sensores & s) {
         for (int j = col, jaux = topo; j <= (s.mensajeC + (tope - pos_aux.second)); j++, jaux++) {
             //            cout << "real: " <<  i << " " << j << endl 
             //                    << "aux: " << iaux << " " << jaux << endl << endl;
+
             if (mapaResultado[i][j] == '?' && mapa_aux[iaux][jaux] != '?')
                 mapaResultado[i][j] = mapa_aux[iaux][jaux];
         }
@@ -708,6 +1020,7 @@ void ComportamientoJugador::act_pos(std::pair <int, int> &p, const Sensores & se
             break;
         case actTURN_R:
             brujula = (brujula + 1) % 4;
+
             break;
     }
 }
@@ -716,6 +1029,7 @@ void ComportamientoJugador::act_pos(std::pair <int, int> &p, const Sensores & se
 //Asignar contador
 
 int asignar_contador() {
+
     return 4 + rand() % (10 - 4);
 }
 
@@ -771,6 +1085,7 @@ Action ComportamientoJugador::girarPre() {
 
         if (rand() % 2 == 0)
             giro_oeste = actTURN_L;
+
         else
             giro_oeste = actTURN_R;
         //giro_este = actTURN_R;
@@ -865,6 +1180,7 @@ Action ComportamientoJugador::girar(const Sensores & s) {
             if (s.terreno[2] == 'A' || s.terreno[2] == 'P' || s.superficie[2] != '_') {
                 if (rand() % 2 == 0)
                     act = actTURN_R;
+
                 else
                     act = actTURN_L;
             }
@@ -894,6 +1210,7 @@ bool ComportamientoJugador::can_advance(unsigned char justo_delante_ter, unsigne
             else if (justo_delante_ter == 'D') {
                 if (sens.objetoActivo == '3') {
                     cont_puertas = 40;
+
                     return sens.objetoActivo == '3';
                 }
             }
@@ -917,6 +1234,7 @@ void ComportamientoJugador::equipaObjeto(unsigned char objeto, Action &act, cons
 
 /*Ver si es un objeto el char pasado*/
 bool es_object(unsigned char i) {
+
     return i == '0' || i == '1' || i == '2' || i == '3' || i == '4';
 }
 
@@ -989,6 +1307,7 @@ void ComportamientoJugador::tiraObjeto(unsigned char obj, Action &act, const Sen
             //cout << "TIRA OBJETO.. " << mochila << " " << tengo_hueso << " " << tengo_biquini << " " << tengo_zapatillas << " " << tengo_llave << " " << tengo_regalo << endl << endl;
         } else if (mochila < 4)
             act = actPUSH;
+
         else
             act = girar(sens);
     }
@@ -1006,6 +1325,7 @@ bool ComportamientoJugador::tengoObjeto(unsigned char obj) {
     else if (obj == '3')
         return tengo_llave;
     else if (obj == '4')
+
         return tengo_regalo;
 }
 
@@ -1073,6 +1393,7 @@ void ComportamientoJugador::reiniciar() {
     std::vector< unsigned char> aux(200, '?');
 
     for (unsigned int i = 0; i < 200; i++) {
+
         mapa_aux.push_back(aux);
     }
     /////
@@ -1351,13 +1672,13 @@ Action ComportamientoJugador::think(Sensores sensores) {
             goto_rey = true;
             pair<int, int> pos_objetivo = getCercano(reyes_seen);
             if (mapaResultado[pos_objetivo.first][pos_objetivo.second] != '?' && mapaResultado[pos_objetivo.first][pos_objetivo.second] != 'A' && mapaResultado[pos_objetivo.first][pos_objetivo.second] != 'B')
-                pathFinding(pos_actual, pos_objetivo, accion, sensores, mapaResultado, mapaEntidades, true);
+                pathFinding(pos_actual, pos_objetivo, accion, sensores, mapaResultado, mapaEntidades, true, brujula);
         } else if (sensores.vida > 80 && !go_point && !sensores.colision && pk_found and !tengo_regalo && pasos_totales > MAX_PASOS_DESCUBRIR and !ejecutando_plan and sensores.regalos.size() > 0 and hay_regalos && accion != actGIVE && justo_delante_sup == '_') {
             //cout << "HACIA EL REGALO! " << pasos_totales << endl;
             go_regalo = true;
             pair<int, int> pos_objetivo = getCercano(sensores.regalos);
             if (mapaResultado[pos_objetivo.first][pos_objetivo.second] != '?' && mapaResultado[pos_objetivo.first][pos_objetivo.second] != 'A' && mapaResultado[pos_objetivo.first][pos_objetivo.second] != 'B')
-                pathFinding(pos_actual, pos_objetivo, accion, sensores, mapaResultado, mapaEntidades, false);
+                pathFinding(pos_actual, pos_objetivo, accion, sensores, mapaResultado, mapaEntidades, false, brujula);
         }
 
         if (!ejecutando_plan && !sensores.colision && accion != actGIVE) { //Comprobamos si hay que planificar camino
@@ -1373,8 +1694,8 @@ Action ComportamientoJugador::think(Sensores sensores) {
                     if (go_pk) { //Camino hacia PK(mapa auxiliar)
                         pair<int, int> pos_objetivo = make_point(pos_pk, pk_orientation, pos_aux);
                         //cout << "PLanificando.." << pos_objetivo.first << " " << pos_objetivo.second << endl;
-                        if (mapa_aux[pos_objetivo.first-1][pos_objetivo.second] != 'B' && mapa_aux[pos_objetivo.first+1][pos_objetivo.second] != 'B' && mapa_aux[pos_objetivo.first][pos_objetivo.second-1] != 'B' && mapa_aux[pos_objetivo.first+1][pos_objetivo.second+1] != 'B')
-                            pathFinding(pos_aux, pos_objetivo, accion, sensores, mapa_aux, mapaEntidades, false);
+                        if (mapa_aux[pos_objetivo.first - 1][pos_objetivo.second] != 'B' && mapa_aux[pos_objetivo.first + 1][pos_objetivo.second] != 'B' && mapa_aux[pos_objetivo.first][pos_objetivo.second - 1] != 'B' && mapa_aux[pos_objetivo.first + 1][pos_objetivo.second + 1] != 'B')
+                            pathFinding(pos_aux, pos_objetivo, accion, sensores, mapa_aux, mapaEntidades, false, brujula);
 
                     } else if (go_point) { //Camino hacia lo demas(mapaResultado y bien posicionado)
                         go_point = false;
@@ -1382,11 +1703,11 @@ Action ComportamientoJugador::think(Sensores sensores) {
                         if (goto_rey) {
                             //cout << "Planificamos rey.." << endl;
                             if (mapaResultado[pos_objetivo.first][pos_objetivo.second] != '?' && mapaResultado[pos_objetivo.first][pos_objetivo.second] != 'A' && mapaResultado[pos_objetivo.first][pos_objetivo.second] != 'B')
-                                pathFinding(pos_actual, pos_objetivo, accion, sensores, mapaResultado, mapaEntidades, true);
+                                pathFinding(pos_actual, pos_objetivo, accion, sensores, mapaResultado, mapaEntidades, true, brujula);
                         } else {
                             //cout << "Planificamos.." << endl;
                             if (mapaResultado[pos_objetivo.first][pos_objetivo.second] != '?' && mapaResultado[pos_objetivo.first][pos_objetivo.second] != 'A' && mapaResultado[pos_objetivo.first][pos_objetivo.second] != 'B')
-                                pathFinding(pos_actual, pos_objetivo, accion, sensores, mapaResultado, mapaEntidades, false);
+                                pathFinding(pos_actual, pos_objetivo, accion, sensores, mapaResultado, mapaEntidades, false, brujula);
                         }
                     }
                 }
@@ -1429,6 +1750,7 @@ Action ComportamientoJugador::think(Sensores sensores) {
     }
 
     last_accion = accion;
+
     return accion;
 }
 

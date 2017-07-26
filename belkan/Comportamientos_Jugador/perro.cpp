@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 int aleatorio4(int tope){
-  double a = random(), c = RAND_MAX;
+  double a = rand(), c = RAND_MAX;
   a = a / (c+1);
   int b = a*(tope+1);
   return b;
