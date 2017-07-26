@@ -149,14 +149,13 @@ private:
 class Nodo {
     friend class AEstrella;
 private:
-
-
-public:
     pair<int, int> pos;
     int h;
     int g;
     int f;
     Nodo* padre;
+
+public:
 
     Nodo(const pair<int, int> &p_pos, int g_p, const pair<int, int> p_obj, Nodo* p_padre);
 
