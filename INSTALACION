@@ -10,3 +10,4 @@ Situados en la carpeta "belkan/":
 
 4.  Ejecución del programa completo: "./Belkan"
     Ejecución del programa no gráfico para ver el progreso de nuestro 'robot' mas rápido: "./BelkanSG ./mapas/mapa_a_probar"
+    Superponiendo una ventana a la terminal desde la que ejecutamos se consigue aún más velocidad.
